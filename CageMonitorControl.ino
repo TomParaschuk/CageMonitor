@@ -1,18 +1,21 @@
 #include<Wire.h>
 
+//MPU
 const int MPU_addr=0x68;
-const int buttonPin = 2;
 const int mpuPowerPin = 3;
-int buttonState = 0;
+const int pinOnDelay = 10;
+
+//reset button
+const int buttonPin = 2;
+const int buttonState = 0;
+
+//constants
 const int waitTime = 1000;
 const int gateChangeAngle = 150;
 const int angleTol = 30;
-const int pinOnDelay = 10;
 
-int acX;
-int acY;
-int acZ;
-
+//acceleration vector from MPU
+//used to find the angle of the closing door
 struct vector
 {
   int x;
@@ -20,26 +23,26 @@ struct vector
   int z;
   double magnitude;
   
-  vector()
-  {
-    x=0;
-    y=0;
-    z=0;
-  }
-
   void calculateMagnitude()
   {
     magnitude = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
     return;
   }
   
+  vector()
+  {
+    x=0;
+    y=0;
+    z=0;
+  }
+    
   vector(int xInit, int yInit, int zInit)
   {
     x = xInit;
     y = yInit;
     z = zInit;
     calculateMagnitude();
-  }
+  }  
 
   
   output()
@@ -86,6 +89,7 @@ struct vector
   
 };
 
+//acceleration vectors of the cage
 vector initAccel;
 vector currentAccel;
 
@@ -93,23 +97,29 @@ void setup()
 {
   pinMode(buttonPin, INPUT);
   pinMode(mpuPowerPin, OUTPUT);
-
-  turnOnMPU();
+  //pinMode(
   
-  Wire.begin(); 
-  Wire.beginTransmission(MPU_addr); 
-  Wire.write(0x6B); 
-  Wire.write(0); 
-  Wire.endTransmission(true); 
+  pinMode(SDA, INPUT);  // remove internal pullup
+    pinMode(SCL, INPUT);  // remove internal pullup
+  
+  turnOnMPU(); 
+
+  
+
+  
   Serial.begin(9600);
-
-  
+ 
   while(digitalRead(buttonPin) == 0)
   {
   }
+
+  //wait for the first button press
+
   
   readAcceleration(&initAccel);
   //initAccel.output();
+
+  turnOffMPU();
 } 
 
 
@@ -163,18 +173,29 @@ vector readAcceleration(vector* toUpdate)
 
 void turnOnMPU()
 {
-  if(digitalRead(mpuPowerPin) == 0)
+  if(digitalRead(mpuPowerPin) == LOW)
   {     
     digitalWrite(mpuPowerPin,HIGH);
     delay(pinOnDelay);
+
+
+    Wire.begin();
+    Wire.beginTransmission(MPU_addr); 
+    Wire.write(0x6B); 
+    Wire.write(0); 
+    Wire.endTransmission(true);
+    
+    delay(1000);
   }
 }
 
 void turnOffMPU()
 {
-  if(digitalRead(mpuPowerPin) == 1)
-  {     
+  if(digitalRead(mpuPowerPin) == HIGH)
+  {
     digitalWrite(mpuPowerPin,LOW);
+    Wire.end();
+    pinMode(SDA, INPUT);  // remove internal pullup
+    pinMode(SCL, INPUT);  // remove internal pullup
   }
 }
-
