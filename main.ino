@@ -3,7 +3,7 @@
 #include "UserInterface.h"
 
 //debug
-const int debugWaitTime = 1000;
+const int debugWaitTime = 5000;
 
 //vectors to record MPU acceleration
 Vector initAccel;
@@ -15,20 +15,14 @@ void setup()
   pinMode(buttonPin, INPUT);
   //configure the MPU power pin
   pinMode(mpuPowerPin, OUTPUT);
-  
-  turnOnMPU();
+ 
+  //send a warmup message
+  powerAndReadAcceleration(&initAccel);
+
+  initAccel.output();
 
   //for debug
   Serial.begin(9600);
- 
-  while(digitalRead(buttonPin) == 0);
-
-  //wait for the first button press
-  
-  readAcceleration(&initAccel);
-  //initAccel.output();
-
-  turnOffMPU();
 } 
 
 
@@ -36,10 +30,11 @@ void loop()
 { 
   delay(debugWaitTime);
 
-  turnOnMPU();
+  powerAndReadAcceleration(&currentAccel);
+
   
-  readAcceleration(&currentAccel);
-  //currentAccel.output();
+  currentAccel.output();
+  
   double angle = angleBetweenVectors(initAccel, currentAccel);
   Serial.print("angle between Vectors: ");
   Serial.println(angle);
@@ -52,6 +47,5 @@ void loop()
     Serial.println("still open");
   }
 
-  turnOffMPU();
   
 }

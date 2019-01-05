@@ -15,13 +15,20 @@ void turnOnMPU()
     //configure the I2C
     Wire.begin();
     //transmit initialization information
+
+    //debug code
+    Wire.beginTransmission(MPU_addr);
+    int error = Wire.endTransmission();
+    Serial.print("error code is");
+    Serial.println(error);
+    
     Wire.beginTransmission(MPU_addr);
     Wire.write(0x6B); 
     Wire.write(0); 
     Wire.endTransmission(true);
-
+  
     //wait for initialization information
-    delay(mpuInitDelay);
+    delay(mpuInitDelay);  
   }
 }
 
@@ -33,15 +40,17 @@ void turnOffMPU()
   {
     //turn off power through digital pin
     digitalWrite(mpuPowerPin,LOW);
+    
     //terminate I2C
-    Wire.end();
-    pinMode(SDA, INPUT);  // remove internal pullup
-    pinMode(SCL, INPUT);  // remove internal pullup
+    //Wire.end();
+    
+    //pinMode(SDA, INPUT);  // remove internal pullup
+    //pinMode(SCL, INPUT);  // remove internal pullup
   }
 }
 
 //read acceleration into a vector
-Vector readAcceleration(Vector* toUpdate)
+void readAcceleration(Vector* toUpdate)
 {
   //variables to read in acceleration
   int acX;
@@ -60,3 +69,11 @@ Vector readAcceleration(Vector* toUpdate)
   //update the vector given
   toUpdate->setAll(acX,acY,acZ);
 }
+
+void powerAndReadAcceleration(Vector* toUpdate)
+{
+  turnOnMPU();
+  readAcceleration(toUpdate);
+  turnOffMPU();
+}
+
